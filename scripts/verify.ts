@@ -10,7 +10,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Arcscan (Blockscout) rate-limits its public API fairly aggressively; back
 // off between contracts so a fresh run doesn't get 429'd after the first one.
-const DELAY_BETWEEN_CONTRACTS_MS = 15_000;
+const DELAY_BETWEEN_CONTRACTS_MS = 60_000;
 
 async function main() {
   const deploymentFile = path.join(__dirname, "..", "deployments", `${network.name}.json`);

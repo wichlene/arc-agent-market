@@ -1,0 +1,25 @@
+{
+  "name": "arc-agent-market",
+  "version": "0.1.0",
+  "description": "ERC-8004 (agent identity/reputation) + ERC-8183 (agent job escrow) marketplace on Circle's Arc network",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "clean": "hardhat clean",
+    "node": "hardhat node",
+    "deploy:arc-testnet": "hardhat run scripts/deploy.ts --network arcTestnet",
+    "interact:arc-testnet": "hardhat run scripts/interact.ts --network arcTestnet"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.1.0",
+    "@openzeppelin/contracts-upgradeable": "^5.1.0",
+    "@openzeppelin/hardhat-upgrades": "^3.9.0",
+    "dotenv": "^16.4.5",
+    "hardhat": "^2.22.17",
+    "solc": "^0.8.28",
+    "typescript": "^5.6.3"
+  }
+}

@@ -2,15 +2,22 @@
 // the @openzeppelin/hardhat-upgrades <-> hardhat-verify integration) on
 // Arcscan. Read-only — no private key needed.
 //   npx hardhat run scripts/verify.ts --network arcTestnet
+//
+// Set CONTRACTS to a comma-separated subset of names (matching the keys in
+// deployments/<network>.json's "contracts" object) to only (re)try those —
+// useful when some contracts already verified and you're just mopping up
+// the rest without burning rate-limit budget re-checking done ones.
+//   CONTRACTS=ValidationRegistry,JobEscrow npx hardhat run scripts/verify.ts --network arcTestnet
 import { run, network } from "hardhat";
 import * as fs from "fs";
 import * as path from "path";
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Arcscan (Blockscout) rate-limits its public API fairly aggressively; back
-// off between contracts so a fresh run doesn't get 429'd after the first one.
-const DELAY_BETWEEN_CONTRACTS_MS = 60_000;
+// Arcscan (Blockscout) rate-limits its public API aggressively — even with
+// an API key, back-to-back calls (implementation + proxy + link, each with
+// their own polling) trip it. Back off between contracts.
+const DELAY_BETWEEN_CONTRACTS_MS = 90_000;
 
 async function main() {
   const deploymentFile = path.join(__dirname, "..", "deployments", `${network.name}.json`);
@@ -19,7 +26,12 @@ async function main() {
   }
   const deployment = JSON.parse(fs.readFileSync(deploymentFile, "utf8"));
 
-  const entries = Object.entries(deployment.contracts);
+  const only = process.env.CONTRACTS?.trim() ? process.env.CONTRACTS.split(",").map((s) => s.trim()) : undefined;
+  const entries = Object.entries(deployment.contracts).filter(([name]) => !only || only.includes(name));
+  if (entries.length === 0) {
+    console.log(`No contracts matched CONTRACTS="${process.env.CONTRACTS}". Available: ${Object.keys(deployment.contracts).join(", ")}`);
+    return;
+  }
   for (let i = 0; i < entries.length; i++) {
     const [name, address] = entries[i];
     console.log(`\nVerifying ${name} at ${address}...`);

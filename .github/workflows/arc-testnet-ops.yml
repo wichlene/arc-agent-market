@@ -15,6 +15,7 @@ on:
           - balance
           - deploy
           - interact
+          - verify
         default: balance
       job_count:
         description: "Number of demo jobs to run (interact only)"
@@ -55,6 +56,12 @@ jobs:
         env:
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           JOB_COUNT: ${{ inputs.job_count }}
+
+      - name: Verify contracts on Arcscan
+        if: inputs.action == 'verify'
+        run: npm run verify:arc-testnet
+        env:
+          ARCSCAN_API_KEY: ${{ secrets.ARCSCAN_API_KEY }}
 
       - name: Upload deployment addresses as an artifact
         if: inputs.action == 'deploy'

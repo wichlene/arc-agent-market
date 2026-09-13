@@ -12,7 +12,8 @@
     "node": "hardhat node",
     "balance:arc-testnet": "hardhat run scripts/check-balance.ts --network arcTestnet",
     "deploy:arc-testnet": "hardhat run scripts/deploy.ts --network arcTestnet",
-    "interact:arc-testnet": "hardhat run scripts/interact.ts --network arcTestnet"
+    "interact:arc-testnet": "hardhat run scripts/interact.ts --network arcTestnet",
+    "verify:arc-testnet": "hardhat run scripts/verify.ts --network arcTestnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",

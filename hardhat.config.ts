@@ -41,7 +41,7 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      arcTestnet: process.env.ARCSCAN_API_KEY ?? "not-needed",
+      arcTestnet: process.env.ARCSCAN_API_KEY || "not-needed",
     },
     customChains: [
       {

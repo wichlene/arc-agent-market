@@ -5,6 +5,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
+    "prepare": "node scripts/install-git-hooks.js",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "clean": "hardhat clean",

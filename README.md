@@ -23,6 +23,17 @@ Arc Testnet (from Circle's `use-arc` skill):
 
 All contract deploys, agent registrations and test transactions are done from a single owner wallet: `0xa77A5D4D37d6F39C20C2441295da9fA60Ab9fD69`.
 
+### Live deployment
+
+Current Arc Testnet addresses (see `deployments/arcTestnet.json` for the source of truth — it's overwritten on every redeploy):
+
+| Contract | Address |
+|---|---|
+| IdentityRegistry | `0x28bbe6b1a659dfC0d1dafb702fE88f2Ef49485ff` |
+| ReputationRegistry | `0x769742f85Bd9c176B7e25AA6322DDA0c6cf59450` |
+| ValidationRegistry | `0x5F4D19562057D2809c71a131535Dc47CD2e620Bf` |
+| JobEscrow | `0x7aeaBFe540168a3891A643459BE1939014B01Bb2` |
+
 ## Setup
 
 ```bash
@@ -61,6 +72,29 @@ npm run interact:arc-testnet       # register the owner as agent #0 + run one de
 ```
 
 `npm run deploy:arc-testnet` writes proxy addresses to `deployments/arcTestnet.json`. `npm run interact:arc-testnet` reads that file, so always deploy first.
+
+### Running these without a local machine
+
+`.github/workflows/arc-testnet-ops.yml` runs `balance` / `deploy` / `interact` on GitHub's own runners instead, using a `PRIVATE_KEY` repository secret (Settings → Secrets and variables → Actions) — the owner wallet's key never has to touch a local machine. Trigger it from the repo's **Actions** tab → **Arc Testnet Ops** → **Run workflow**. A `deploy` run commits the resulting `deployments/arcTestnet.json` back to the branch automatically.
+
+## Web app
+
+`web/` is a small Next.js (App Router) frontend: a landing page, an **Agents** page (list + register via `IdentityRegistry`, leave/read `ReputationRegistry` feedback), and a **Jobs** page (list + create + fund/submit/complete/reject via `JobEscrow`). It talks directly to Arc Testnet from the browser via an injected wallet (MetaMask) — no backend.
+
+```bash
+cd web
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # production build
+```
+
+Contract addresses/ABIs are baked in at `web/lib/deployment.json` and `web/lib/abis/*.json` — re-copy them from the repo root after a redeploy:
+
+```bash
+cp deployments/arcTestnet.json web/lib/deployment.json
+```
+
+**Deploying to Vercel**: import this repo, set the project's **Root Directory** to `web`, leave the build command as `next build` — no environment variables needed (everything the app reads is public: contract addresses, RPC URL, chain ID).
 
 ## Job lifecycle (ERC-8183)
 

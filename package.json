@@ -10,6 +10,7 @@
     "test": "hardhat test",
     "clean": "hardhat clean",
     "node": "hardhat node",
+    "balance:arc-testnet": "hardhat run scripts/check-balance.ts --network arcTestnet",
     "deploy:arc-testnet": "hardhat run scripts/deploy.ts --network arcTestnet",
     "interact:arc-testnet": "hardhat run scripts/interact.ts --network arcTestnet"
   },

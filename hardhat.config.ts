@@ -10,7 +10,14 @@ const ARC_TESTNET_RPC_URL =
 
 // Owner wallet (0xa77A5D4D37d6F39C20C2441295da9fA60Ab9fD69) used for every
 // on-chain action on Arc: deploys, agent registration, test transactions.
-const PRIVATE_KEY = process.env.PRIVATE_KEY;
+// Accepts the key with or without a "0x" prefix (MetaMask's "Show private
+// key" screen omits it) and normalizes it to what Hardhat expects.
+const rawPrivateKey = process.env.PRIVATE_KEY;
+const PRIVATE_KEY = rawPrivateKey
+  ? rawPrivateKey.startsWith("0x")
+    ? rawPrivateKey
+    : `0x${rawPrivateKey}`
+  : undefined;
 const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : [];
 
 const config: HardhatUserConfig = {

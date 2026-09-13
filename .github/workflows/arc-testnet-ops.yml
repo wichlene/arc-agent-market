@@ -1,0 +1,73 @@
+name: Arc Testnet Ops
+
+# Manual-only: run from the GitHub Actions tab ("Run workflow"). Uses the
+# PRIVATE_KEY repository secret (Settings -> Secrets and variables ->
+# Actions) so the owner wallet's key never has to leave GitHub's own
+# encrypted secret store or be typed into a local machine.
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to run"
+        required: true
+        type: choice
+        options:
+          - balance
+          - deploy
+          - interact
+        default: balance
+      job_count:
+        description: "Number of demo jobs to run (interact only)"
+        required: false
+        type: string
+        default: "3"
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - run: npm ci
+
+      - name: Check balance
+        if: inputs.action == 'balance'
+        run: npm run balance:arc-testnet
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Deploy contracts
+        if: inputs.action == 'deploy'
+        run: npm run deploy:arc-testnet
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+
+      - name: Run demo agent/job activity
+        if: inputs.action == 'interact'
+        run: npm run interact:arc-testnet
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          JOB_COUNT: ${{ inputs.job_count }}
+
+      - name: Upload deployment addresses as an artifact
+        if: inputs.action == 'deploy'
+        uses: actions/upload-artifact@v4
+        with:
+          name: arc-testnet-deployment
+          path: deployments/arcTestnet.json
+
+      - name: Commit deployment addresses back to this branch
+        if: inputs.action == 'deploy'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deployments/arcTestnet.json
+          git diff --cached --quiet || git commit -m "Record Arc Testnet deployment addresses [skip ci]"
+          git push origin HEAD:${{ github.ref_name }}

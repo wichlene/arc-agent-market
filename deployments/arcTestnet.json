@@ -1,0 +1,15 @@
+{
+  "network": "arcTestnet",
+  "chainId": "5042002",
+  "deployer": "0xa77A5D4D37d6F39C20C2441295da9fA60Ab9fD69",
+  "deployedAt": "2026-09-13T18:38:34.126Z",
+  "contracts": {
+    "IdentityRegistry": "0x28bbe6b1a659dfC0d1dafb702fE88f2Ef49485ff",
+    "ReputationRegistry": "0x769742f85Bd9c176B7e25AA6322DDA0c6cf59450",
+    "ValidationRegistry": "0x5F4D19562057D2809c71a131535Dc47CD2e620Bf",
+    "JobEscrow": "0x7aeaBFe540168a3891A643459BE1939014B01Bb2"
+  },
+  "paymentTokens": {
+    "USDC": "0x3600000000000000000000000000000000000000"
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Contract, JsonRpcProvider, MaxUint256, ZeroAddress, ZeroHash, formatUnits, parseUnits } from "ethers";
+import { Contract, JsonRpcProvider, ZeroAddress, ZeroHash, formatUnits, parseUnits } from "ethers";
 import { ARC_TESTNET, ARC_USDC_ADDRESS, ARC_USDC_DECIMALS } from "@/lib/chain";
 import { getJobEscrow, JOB_STATUS_LABELS, ADDRESSES } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
@@ -225,7 +225,10 @@ function JobCard({
       const jobEscrowAddress = ADDRESSES.JobEscrow;
       const allowance: bigint = await usdc.allowance(myAddress, jobEscrowAddress);
       if (allowance < job.budget) {
-        const approveTx = await usdc.approve(jobEscrowAddress, MaxUint256);
+        // Approve exactly this job's budget, not an unlimited amount — avoids
+        // the "unlimited approval" pattern wallet security scanners flag,
+        // and limits exposure if JobEscrow were ever compromised.
+        const approveTx = await usdc.approve(jobEscrowAddress, job.budget);
         await approveTx.wait();
       }
       const jobEscrow = getJobEscrow(signer);

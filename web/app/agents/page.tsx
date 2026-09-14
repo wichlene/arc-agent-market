@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { JsonRpcProvider, ZeroHash, encodeBytes32String, formatUnits } from "ethers";
-import { ARC_TESTNET } from "@/lib/chain";
+import { ZeroHash, encodeBytes32String, formatUnits } from "ethers";
+import { getReadProvider } from "@/lib/chain";
 import { getIdentityRegistry, getReputationRegistry } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
 import { AddressLink, TxLink } from "@/components/AddressLink";
@@ -14,7 +14,7 @@ type Agent = {
   agentWallet: string;
 };
 
-const readProvider = new JsonRpcProvider(ARC_TESTNET.rpcUrls[0]);
+const readProvider = getReadProvider();
 
 export default function AgentsPage() {
   const { signer, address, isOnArcTestnet } = useWallet();

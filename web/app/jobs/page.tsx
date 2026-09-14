@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Contract, JsonRpcProvider, ZeroAddress, ZeroHash, formatUnits, parseUnits } from "ethers";
-import { ARC_TESTNET, ARC_USDC_ADDRESS, ARC_USDC_DECIMALS } from "@/lib/chain";
+import { Contract, ZeroAddress, ZeroHash, formatUnits, parseUnits } from "ethers";
+import { ARC_USDC_ADDRESS, ARC_USDC_DECIMALS, getReadProvider } from "@/lib/chain";
 import { getJobEscrow, JOB_STATUS_LABELS, ADDRESSES } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
 import { AddressLink, TxLink } from "@/components/AddressLink";
@@ -13,7 +13,7 @@ const USDC_ABI = [
   "function approve(address,uint256) returns (bool)",
 ];
 
-const readProvider = new JsonRpcProvider(ARC_TESTNET.rpcUrls[0]);
+const readProvider = getReadProvider();
 
 type Job = {
   id: bigint;

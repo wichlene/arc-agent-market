@@ -6,6 +6,7 @@ import { getReadProvider } from "@/lib/chain";
 import { getIdentityRegistry, getReputationRegistry } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
 import { AddressLink, TxLink } from "@/components/AddressLink";
+import { formatTxError } from "@/lib/errors";
 
 type Agent = {
   agentId: bigint;
@@ -64,7 +65,7 @@ export default function AgentsPage() {
       setNewAgentURI("");
       await loadAgents();
     } catch (e: any) {
-      setStatus(e?.shortMessage ?? e?.message ?? "İşlem başarısız oldu.");
+      setStatus(formatTxError(e));
     } finally {
       setRegistering(false);
     }
@@ -153,7 +154,7 @@ function AgentCard({ agent, signer, myAddress }: { agent: Agent; signer: any; my
       setStatus("Geri bildirim kaydedildi.");
       await loadFeedback();
     } catch (e: any) {
-      setStatus(e?.shortMessage ?? e?.message ?? "İşlem başarısız oldu.");
+      setStatus(formatTxError(e));
     } finally {
       setSubmitting(false);
     }

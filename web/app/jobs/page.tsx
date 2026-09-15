@@ -6,6 +6,7 @@ import { ARC_USDC_ADDRESS, ARC_USDC_DECIMALS, getReadProvider } from "@/lib/chai
 import { getJobEscrow, JOB_STATUS_LABELS, ADDRESSES } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
 import { AddressLink, TxLink } from "@/components/AddressLink";
+import { formatTxError } from "@/lib/errors";
 
 const USDC_ABI = [
   "function balanceOf(address) view returns (uint256)",
@@ -126,7 +127,7 @@ function CreateJobForm({ signer, onCreated }: { signer: any; onCreated: () => vo
       setStatus("İş oluşturuldu.");
       onCreated();
     } catch (e: any) {
-      setStatus(e?.shortMessage ?? e?.message ?? "İşlem başarısız oldu.");
+      setStatus(formatTxError(e));
     } finally {
       setSubmitting(false);
     }
@@ -213,7 +214,7 @@ function JobCard({
       setStatus(`${label}: tamamlandı`);
       onChanged();
     } catch (e: any) {
-      setStatus(e?.shortMessage ?? e?.message ?? "İşlem başarısız oldu.");
+      setStatus(formatTxError(e));
     } finally {
       setBusy(false);
     }

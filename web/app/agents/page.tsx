@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ZeroHash, encodeBytes32String, formatUnits } from "ethers";
+import { ZeroHash, encodeBytes32String } from "ethers";
 import { getReadProvider } from "@/lib/chain";
 import { getIdentityRegistry, getReputationRegistry } from "@/lib/contracts";
 import { useWallet } from "@/lib/useWallet";
-import { AddressLink, TxLink } from "@/components/AddressLink";
+import { AddressLink } from "@/components/AddressLink";
 import { formatTxError } from "@/lib/errors";
 
 type Agent = {
@@ -29,17 +29,19 @@ export default function AgentsPage() {
     setLoading(true);
     try {
       const identityRegistry = getIdentityRegistry(readProvider);
-      const events = await identityRegistry.queryFilter(identityRegistry.filters.Registered(), 0, "latest");
       const list: Agent[] = [];
-      for (const event of events) {
-        if (!("args" in event)) continue;
-        const agentId = event.args.agentId as bigint;
-        const owner = event.args.owner as string;
-        const agentURI: string = await identityRegistry.tokenURI(agentId).catch(() => "");
-        const agentWallet: string = await identityRegistry.getAgentWallet(agentId);
-        list.push({ agentId, owner, agentURI, agentWallet });
+      for (let i = 0; ; i++) {
+        try {
+          const owner: string = await identityRegistry.ownerOf(i);
+          const [agentURI, agentWallet] = await Promise.all([
+            identityRegistry.tokenURI(i).catch(() => ""),
+            identityRegistry.getAgentWallet(i) as Promise<string>,
+          ]);
+          list.push({ agentId: BigInt(i), owner, agentURI, agentWallet });
+        } catch {
+          break;
+        }
       }
-      list.sort((a, b) => Number(a.agentId - b.agentId));
       setAgents(list);
     } finally {
       setLoading(false);
@@ -70,6 +72,8 @@ export default function AgentsPage() {
       setRegistering(false);
     }
   }
+
+  const knownClients = [...new Set(agents.map((a) => a.owner))];
 
   return (
     <div className="space-y-8">
@@ -105,40 +109,60 @@ export default function AgentsPage() {
         {loading && <p className="text-sm text-slate-500">Yükleniyor…</p>}
         {!loading && agents.length === 0 && <p className="text-sm text-slate-500">Henüz kayıtlı agent yok.</p>}
         {agents.map((agent) => (
-          <AgentCard key={agent.agentId.toString()} agent={agent} signer={signer} myAddress={address} />
+          <AgentCard key={agent.agentId.toString()} agent={agent} signer={signer} myAddress={address} knownClients={knownClients} />
         ))}
       </section>
     </div>
   );
 }
 
-function AgentCard({ agent, signer, myAddress }: { agent: Agent; signer: any; myAddress: string | null }) {
+function AgentCard({
+  agent,
+  signer,
+  myAddress,
+  knownClients,
+}: {
+  agent: Agent;
+  signer: any;
+  myAddress: string | null;
+  knownClients: string[];
+}) {
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [value, setValue] = useState("90");
   const [tag, setTag] = useState("job-quality");
   const [submitting, setSubmitting] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<any[] | null>(null);
+  const [feedback, setFeedback] = useState<{ client: string; value: bigint; valueDecimals: number }[] | null>(null);
 
   const isSelf = myAddress?.toLowerCase() === agent.owner.toLowerCase();
 
   async function loadFeedback() {
-    const reputationRegistry = getReputationRegistry(readProvider);
-    const events = await reputationRegistry.queryFilter(
-      reputationRegistry.filters.FeedbackGiven(agent.agentId),
-      0,
-      "latest"
-    );
-    setFeedback(
-      events
-        .filter((e): e is typeof e & { args: any } => "args" in e)
-        .map((e) => ({
-          client: e.args.client as string,
-          value: e.args.value as bigint,
-          valueDecimals: e.args.valueDecimals as number,
-          txHash: e.transactionHash,
+    try {
+      const reputationRegistry = getReputationRegistry(readProvider);
+      const counts = await Promise.all(
+        knownClients.map(async (client) => ({
+          client,
+          count: Number(await reputationRegistry.feedbackCount(agent.agentId, client)),
         }))
-    );
+      );
+      const items: { client: string; value: bigint; valueDecimals: number }[] = [];
+      const reads: Promise<void>[] = [];
+      for (const { client, count } of counts) {
+        for (let i = 0; i < count; i++) {
+          reads.push(
+            reputationRegistry.readFeedback(agent.agentId, client, i).then((fb: any) => {
+              if (!fb.revoked) {
+                items.push({ client, value: fb.value, valueDecimals: fb.valueDecimals });
+              }
+            })
+          );
+        }
+      }
+      await Promise.all(reads);
+      setFeedback(items);
+    } catch {
+      setFeedback([]);
+    }
   }
 
   async function submitFeedback() {
@@ -199,11 +223,8 @@ function AgentCard({ agent, signer, myAddress }: { agent: Agent; signer: any; my
           {feedback && feedback.length > 0 && (
             <ul className="space-y-1 text-sm">
               {feedback.map((f, i) => (
-                <li key={i} className="flex items-center justify-between">
-                  <span>
-                    <AddressLink address={f.client} /> → {f.value.toString()} ({f.valueDecimals} decimal)
-                  </span>
-                  <TxLink hash={f.txHash} />
+                <li key={i}>
+                  <AddressLink address={f.client} /> → {f.value.toString()} ({f.valueDecimals} decimal)
                 </li>
               ))}
             </ul>
